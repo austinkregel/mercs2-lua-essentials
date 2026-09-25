@@ -8,6 +8,11 @@ name: Release on version bump
 # v<version> with the CHANGELOG section as its notes. It runs on EVERY push to master but is fully
 # idempotent: a push that doesn't change the version finds the tag already there and stops after a quick
 # check, so "release when (and only when) the version is new" needs no extra bookkeeping.
+#
+# Each release carries TWO zips: Ess-<version>.zip (the OnLoad install, built by build/package.py, no UI
+# movies) and <name>-v<version>.zip (the Quartermaster Shipment: manifest.yaml, src/shipment, LICENSE).
+# The committed manifest.yaml must already be at Ess.VERSION; the version is stamped into it only inside
+# the runner, and this workflow never commits or pushes.
 
 on:
   push:
@@ -44,6 +49,42 @@ jobs:
             echo "No tag v${{ steps.ver.outputs.version }} yet -- releasing."
           fi
 
+      # The Quartermaster Shipment (manifest.yaml) is released at the same version. The COMMITTED
+      # manifest must already say so: mercs.ink reads manifest.yaml from the repo at the release tag, so a
+      # version that only existed in this runner would never reach it. Nothing in this workflow commits
+      # or pushes, so a mismatch fails here rather than being fixed up.
+      - name: manifest.yaml version must equal Ess.VERSION; read the Shipment name
+        if: steps.check.outputs.release == 'true'
+        id: shp
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          MAN=$(sed -n '/^shipment:/,/^contributions:/p' manifest.yaml \
+            | sed -n 's/^[[:space:]]*version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' | head -1)
+          if [ "$MAN" != "$VERSION" ]; then
+            echo "::error::Ess.VERSION is $VERSION but manifest.yaml's shipment.version is '$MAN'. Commit manifest.yaml at $VERSION."
+            exit 1
+          fi
+          # The name is whatever the manifest says -- never hard-coded. Read the `name:` inside the
+          # `shipment:` block, before `contributions:` (which has `name:` fields of its own).
+          NAME=$(sed -n '/^shipment:/,/^contributions:/p' manifest.yaml \
+            | sed -n 's/^[[:space:]]*name:[[:space:]]*\([^[:space:]#]*\).*/\1/p' | head -1)
+          [ -n "$NAME" ] || { echo "::error::could not read shipment.name from manifest.yaml"; exit 1; }
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Shipment $NAME at $MAN"
+
+      # Stamp Ess.VERSION into manifest.yaml inside this runner only, and read it back. After the guard
+      # above this changes nothing; it stays so the zip's manifest is written from Ess.VERSION, the one
+      # source of the version. It is NEVER committed or pushed.
+      - name: Stamp shipment.version in manifest.yaml (runner only)
+        if: steps.check.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          sed -i "0,/^[[:space:]]*version:/s/^\([[:space:]]*\)version:.*/\1version: $VERSION/" manifest.yaml
+          got=$(sed -n 's/^[[:space:]]*version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' manifest.yaml | head -1)
+          [ "$got" = "$VERSION" ] || { echo "::error::stamp failed -- manifest reads '$got'"; exit 1; }
+
       - name: Install Lua 5.1 (syntax gate)
         if: steps.check.outputs.release == 'true'
         run: sudo apt-get update && sudo apt-get install -y lua5.1
@@ -63,6 +104,79 @@ jobs:
           # refresh the bundled browser IDE from its own latest release so the zip ships the current build
           curl -sfL "https://github.com/loganw234/mercs2-lua-web-ide/releases/latest/download/mercs2-lua-ide.html" -o tools/mercs2-lua-ide.html || echo "IDE fetch failed -- shipping the committed copy"
           python3 build/package.py
+
+      # manifest.yaml's two add_script sources are generated: copy them into the gitignored
+      # src/shipment/lua/ so qm can lint them and the Shipment zip carries them. A missing source fails.
+      - name: Stage the Shipment's Lua sources
+        if: steps.check.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p src/shipment/lua
+          for pair in "dist/Ess.lua:src/shipment/lua/ess.lua" "dist/EssNames.lua:src/shipment/lua/ess_names.lua"; do
+            from="${pair%%:*}"
+            to="${pair#*:}"
+            if [ ! -f "$from" ]; then
+              echo "::error::$from is missing, so $to cannot be staged for the Shipment"
+              exit 1
+            fi
+            cp "$from" "$to"
+            cmp "$from" "$to"
+            echo "staged $from -> $to ($(wc -c < "$to") bytes)"
+          done
+
+      # The qm version comes from .github/qm-version (shared with ci.yml). GitHub's recorded sha256 for
+      # the asset is read BEFORE downloading, and the downloaded bytes must match it.
+      - name: Install qm (version from .github/qm-version)
+        if: steps.check.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          QM_VERSION="$(tr -d '[:space:]' < .github/qm-version)"
+          case "$QM_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::.github/qm-version holds '$QM_VERSION', not a vX.Y.Z qm release tag"; exit 1 ;;
+          esac
+          repo=Mercenaries-Fan-Build/mercs2-wad-simulator
+          asset=qm-linux-x86_64
+          want=$(gh api "repos/$repo/releases/tags/$QM_VERSION" \
+            --jq ".assets[] | select(.name == \"$asset\") | .digest") \
+            || { echo "::error::qm release $QM_VERSION was not found in $repo -- check .github/qm-version"; exit 1; }
+          if [ -z "$want" ]; then
+            echo "::error::$asset is not in qm $QM_VERSION -- check .github/qm-version"
+            exit 1
+          fi
+          want=${want#sha256:}
+          gh release download "$QM_VERSION" --repo "$repo" --pattern "$asset" --output qm
+          got=$(sha256sum qm | cut -d' ' -f1)
+          if [ "$want" != "$got" ]; then
+            echo "::error::$asset failed verification -- expected $want, got $got"
+            exit 1
+          fi
+          echo "qm $QM_VERSION verified: $got"
+          chmod +x qm
+
+      # Refuse to release a Shipment that does not lint. Gated on the exit code, not on printed output.
+      - name: Lint the Shipment before releasing it
+        if: steps.check.outputs.release == 'true'
+        run: ./qm lint .
+
+      # <name>-v<version>.zip is the asset Modkit selects by exact name. Members: manifest.yaml,
+      # src/shipment (the staged Lua + the committed movies) and LICENSE.
+      - name: Package the Shipment zip
+        if: steps.check.outputs.release == 'true'
+        id: pkg
+        run: |
+          set -euo pipefail
+          ASSET="dist/${{ steps.shp.outputs.name }}-v${{ steps.ver.outputs.version }}.zip"
+          rm -f "$ASSET"
+          zip -r "$ASSET" manifest.yaml src/shipment LICENSE
+          # List first, then search the list: piping unzip straight into `grep -q` under pipefail can fail
+          # on SIGPIPE when grep exits at the first match.
+          MEMBERS="$(unzip -Z1 "$ASSET")"
+          grep -qx 'manifest.yaml' <<< "$MEMBERS" || { echo "::error::$ASSET is missing manifest.yaml"; exit 1; }
+          unzip -l "$ASSET"
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
 
       - name: Pull the CHANGELOG section for this version
         if: steps.check.outputs.release == 'true'
@@ -90,11 +204,12 @@ jobs:
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           ASSET="dist/Ess-${VERSION}.zip"
+          SHIPMENT_ASSET="${{ steps.pkg.outputs.asset }}"
           if [ "${{ steps.notes.outputs.found }}" = "true" ]; then
-            gh release create "v${VERSION}" "$ASSET" \
+            gh release create "v${VERSION}" "$ASSET" "$SHIPMENT_ASSET" \
               --title "Ess ${VERSION}" --notes-file RELEASE_NOTES.md --target "${{ github.sha }}"
           else
-            gh release create "v${VERSION}" "$ASSET" \
+            gh release create "v${VERSION}" "$ASSET" "$SHIPMENT_ASSET" \
               --title "Ess ${VERSION}" --generate-notes --target "${{ github.sha }}"
           fi
-          echo "Released v${VERSION} with dist/Ess-${VERSION}.zip"
+          echo "Released v${VERSION} with dist/Ess-${VERSION}.zip and ${SHIPMENT_ASSET}"
