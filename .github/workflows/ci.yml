@@ -3,7 +3,8 @@ name: CI
 # Validate every push/PR to master: the build merges clean, the merged Lua actually PARSES (a stock
 # luac5.1 -p syntax gate -- exactly the check that can't be run on the dev box, which has no Lua), and the
 # release zip packages without error. Uploads the zip as a short-lived artifact so a build can be grabbed
-# and tried without cutting a release.
+# and tried without cutting a release. Then checks the Quartermaster Shipment (manifest.yaml): stages its
+# generated Lua sources, installs the qm pinned in .github/qm-version, and runs qm lint and qm compile-lua.
 
 on:
   push:
@@ -72,3 +73,70 @@ jobs:
           path: dist/Ess-*.zip
           retention-days: 14
           if-no-files-found: error
+
+      # ---- The Quartermaster Shipment (manifest.yaml) ----------------------------------------------------
+      # manifest.yaml's two add_script sources are generated, so they are copied into place before qm runs:
+      # qm refuses a declared source that does not exist, even for lint. src/shipment/lua/ is gitignored.
+      # A missing dist file fails here rather than being skipped (dist/EssNames.lua exists only when
+      # package.py built it from data/names.json).
+      - name: Stage the Shipment's Lua sources
+        run: |
+          set -euo pipefail
+          mkdir -p src/shipment/lua
+          for pair in "dist/Ess.lua:src/shipment/lua/ess.lua" "dist/EssNames.lua:src/shipment/lua/ess_names.lua"; do
+            from="${pair%%:*}"
+            to="${pair#*:}"
+            if [ ! -f "$from" ]; then
+              echo "::error::$from is missing, so $to cannot be staged for the Shipment"
+              exit 1
+            fi
+            cp "$from" "$to"
+            cmp "$from" "$to"
+            echo "staged $from -> $to ($(wc -c < "$to") bytes)"
+          done
+
+      # `qm` ships as a prebuilt binary, so nothing here needs a Rust toolchain. The version comes from
+      # .github/qm-version (shared with release.yml). The expected sha256 is read from GitHub's own record
+      # of the release asset BEFORE downloading, so the check is against what the release claims to hold
+      # rather than against the bytes that happened to arrive.
+      - name: Install qm (version from .github/qm-version)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          QM_VERSION="$(tr -d '[:space:]' < .github/qm-version)"
+          case "$QM_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::.github/qm-version holds '$QM_VERSION', not a vX.Y.Z qm release tag"; exit 1 ;;
+          esac
+          repo=Mercenaries-Fan-Build/mercs2-wad-simulator
+          asset=qm-linux-x86_64
+          want=$(gh api "repos/$repo/releases/tags/$QM_VERSION" \
+            --jq ".assets[] | select(.name == \"$asset\") | .digest") \
+            || { echo "::error::qm release $QM_VERSION was not found in $repo -- check .github/qm-version"; exit 1; }
+          if [ -z "$want" ]; then
+            echo "::error::$asset is not in qm $QM_VERSION -- check .github/qm-version"
+            exit 1
+          fi
+          want=${want#sha256:}
+          gh release download "$QM_VERSION" --repo "$repo" --pattern "$asset" --output qm
+          got=$(sha256sum qm | cut -d' ' -f1)
+          if [ "$want" != "$got" ]; then
+            echo "::error::$asset failed verification -- expected $want, got $got"
+            exit 1
+          fi
+          echo "qm $QM_VERSION verified: $got"
+          chmod +x qm
+
+      # Hermetic: no game install and no retail WADs. Gated on the EXIT CODE, not on what gets printed.
+      - name: Lint the Shipment
+        run: ./qm lint .
+
+      # Compile both modules with the game's Lua compiler, each under its bare chunk name (the file stem:
+      # ess, ess_names), and check each output's header. Stock luac5.1 -p above is a syntax check only.
+      - name: Compile the Shipment's Lua modules
+        run: ./qm compile-lua src/shipment/lua/ess.lua src/shipment/lua/ess_names.lua --out-dir _build/compile-lua
+
+      - name: What was checked
+        if: always()
+        run: ./qm rules
