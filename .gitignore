@@ -4,3 +4,9 @@ __pycache__/
 
 # packaged tool artifacts (e.g. LiveBoneMonitor.zip) -- built outputs, not source
 tools/*.zip
+
+# Quartermaster Shipment (manifest.yaml). qm 3.0.0 writes its build output to _build/, and the two
+# add_script sources are copies of dist/Ess.lua and dist/EssNames.lua that the CI and release
+# workflows stage after build/package.py -- generated files, never committed.
+/_build/
+/src/shipment/lua/
