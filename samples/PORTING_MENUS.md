@@ -7,6 +7,10 @@ couple of lines at the top; the categories/entries/`ctx` below are untouched.
 You also get to **delete a dependency**: `Ess.UI.Menu` lives inside `dist/Ess.lua`, so once Ess is loaded
 (`[OnLoad] 1_Ess.lua`) you no longer register `uilib.lua` or `ForgeMenu.lua` in `lua_loader.ini`.
 
+**The menu draws only where the Ess UI movies are installed.** They ship in the Quartermaster Shipment
+(`ess-v<version>.zip`), not in the OnLoad zip, so on an OnLoad-only install a ported menu builds but never
+appears (see `docs/UI_WAD.md`).
+
 The whole builder + `ctx` surface (identical across all three):
 
 ```
