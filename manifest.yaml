@@ -1,0 +1,42 @@
+format: 2
+
+shipment:
+  name: ess
+  title: Ess — Mercenaries 2 Lua essentials
+  version: 0.7.0
+  target: retail
+  authors: [loganw234]
+  description: >-
+    Library only. Adds the `ess` and `ess_names` Lua modules and the Ess UI movies. Nothing runs
+    until a Shipment that requires ess imports it.
+  license: MIT
+  tags: [library, lua, ui]
+
+supersedes:
+  - { dest: on_load, file: 1_Ess.lua }
+  - { dest: on_load, file: 2_EssNames.lua }
+
+load:
+  requires:
+    # lua-bridge 1.0.0 is not published yet. It will be released from its own repo, and Ess 0.7.0
+    # is released only after it: until then this requirement has no provider.
+    - { shipment: lua-bridge, version: "^1.0.0" }
+
+contributions:
+  # Generated: CI and the release workflow copy dist/Ess.lua and dist/EssNames.lua here after
+  # build/package.py. src/shipment/lua/ is gitignored; stage it before running qm locally.
+  - { kind: add_script, name: ess,       source: src/shipment/lua/ess.lua }
+  - { kind: add_script, name: ess_names, source: src/shipment/lua/ess_names.lua }
+  # Committed: extracted byte-exact from the retired data/vz-patch.wad.
+  - { kind: add_movie, name: cbar,       movie: src/shipment/movies/cbar.gfx }
+  - { kind: add_movie, name: chat,       movie: src/shipment/movies/chat.gfx }
+  - { kind: add_movie, name: contracts,  movie: src/shipment/movies/contracts.gfx }
+  - { kind: add_movie, name: cpanel,     movie: src/shipment/movies/cpanel.gfx }
+  - { kind: add_movie, name: ess_ui,     movie: src/shipment/movies/ess_ui.gfx }
+  - { kind: add_movie, name: forge,      movie: src/shipment/movies/forge.gfx }
+  - { kind: add_movie, name: ui_bar,     movie: src/shipment/movies/ui_bar.gfx }
+  - { kind: add_movie, name: ui_confirm, movie: src/shipment/movies/ui_confirm.gfx }
+  - { kind: add_movie, name: ui_input,   movie: src/shipment/movies/ui_input.gfx }
+  - { kind: add_movie, name: ui_list,    movie: src/shipment/movies/ui_list.gfx }
+  - { kind: add_movie, name: ui_panel,   movie: src/shipment/movies/ui_panel.gfx }
+  - { kind: add_movie, name: ui_toast,   movie: src/shipment/movies/ui_toast.gfx }
