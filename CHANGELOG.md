@@ -2,12 +2,52 @@
 
 All notable changes to Ess are recorded here. Versions track `Ess.VERSION` in `src/00_core.lua`.
 
-Releases are automatic: **bump `Ess.VERSION`, add a matching `## [x.y.z]` section below, and push to
-`master`**. `.github/workflows/release.yml` then builds a fresh `1_Ess.lua`, syntax-checks it, packages the
-zip, and publishes a GitHub Release tagged `v<version>` using that section as the notes. (No section for the
-version? It still releases, with auto-generated commit notes.) See the README's "Releasing" section.
+Releases are automatic: **bump `Ess.VERSION`, set `manifest.yaml`'s `shipment.version` to match, add a
+matching `## [x.y.z]` section below, and push to `master`**. `.github/workflows/release.yml` then builds a
+fresh `1_Ess.lua`, syntax-checks it, packages the OnLoad zip, lints and packages the Quartermaster Shipment,
+and publishes a GitHub Release tagged `v<version>` with both zips, using that section as the notes. (No
+section for the version? It still releases, with auto-generated commit notes.) See the README's "Releasing"
+section.
 
 ## [Unreleased]
+
+## [0.7.0]
+
+**Ess is now a Quartermaster Shipment.** Alongside the OnLoad zip, every release now carries
+`ess-v<version>.zip`: a format-2 Shipment (`manifest.yaml` + `src/shipment/` + `LICENSE`) that Modkit
+installs. No Lua API changed in this release; what changed is how Ess is packaged and installed.
+
+### The Shipment
+
+- **Two Lua modules, `ess` and `ess_names`,** added with `add_script`. They are `dist/Ess.lua` and
+  `dist/EssNames.lua`, copied into the gitignored `src/shipment/lua/` by the CI and release workflows.
+- **Ess is a library.** Nothing imports it automatically. A consuming Shipment calls `import("ess")`, and
+  `import("ess_names")` for hash→name lookups.
+- **The 12 UI movies** (`ess_ui`, `chat`, `contracts`, `forge`, `cbar`, `cpanel` and the six `ui_*`) are
+  added with `add_movie` from committed `.gfx` files under `src/shipment/movies/`.
+- **Requires `lua-bridge` `^1.0.0`** (at least 1.0.0, below 2.0.0). Ess 0.7.0 is released only after
+  lua-bridge 1.0.0 is published, because until then the requirement has no provider.
+- **`supersedes` the OnLoad files** `1_Ess.lua` and `2_EssNames.lua`, so the Shipment cannot be installed
+  on top of an OnLoad copy of Ess.
+
+### The OnLoad zip loses the UI
+
+- **`data/vz-patch.wad` is gone** from the repo and from `Ess-<version>.zip`. **`Ess.UI` no longer draws on
+  an OnLoad install**; the movies ship only in the Shipment. `Ess-README.txt` in the zip says so.
+- The movies now live as **committed `.gfx` files**, each extracted byte-exact from the WAD as of
+  `3430c0b` (size, sha256 and name→hash match recorded per commit). Updating a movie means replacing its
+  `.gfx`; `docs/UI_WAD.md` is rewritten to match.
+- `build/package.py`'s WAD gate (`check_wad` and its helpers) is removed with the WAD.
+
+### Pipeline
+
+- **CI** now stages the Shipment's Lua, installs the `qm` pinned in `.github/qm-version` (its sha256
+  checked against GitHub's recorded digest, read before download), and runs `qm lint .`, `qm compile-lua` on both modules
+  and `qm rules`. Every existing check is unchanged.
+- **Release** fails unless the committed `manifest.yaml` version equals `Ess.VERSION`, stamps the version
+  into the manifest inside the runner only (nothing is committed or pushed from CI), lints the Shipment,
+  packages `ess-v<version>.zip` (refusing a zip without `manifest.yaml`) and attaches **both** zips.
+- The `qm` pin is `v3.0.0`, the first `qm` that reads manifest format 2.
 
 ## [0.6.1]
 
