@@ -19,8 +19,10 @@
 --   Ess.Names.load(tTable)  -> Ess.Names          adopt a { ["0xHASH"] = "name" } table (see below)
 --
 -- THE TABLE IS OPTIONAL AND SHIPPED SEPARATELY. At ~23k entries it is far too large to fold into the one
--- merged Ess.lua every user loads, so it rides its own file (scripts/OnLoad/2_EssNames.lua from the release
--- zip) that a user opts into with one lua_loader.ini line. That file just sets the global `__EssNamesDB`;
+-- merged Ess.lua every user loads, so it rides its own file, opted into separately: in the Quartermaster
+-- Shipment it is the `ess_names` module, loaded with import("ess_names"); on an OnLoad install it is
+-- scripts/OnLoad/2_EssNames.lua from the OnLoad zip, registered with its own lua_loader.ini line. Either way
+-- the file just sets the global `__EssNamesDB`;
 -- this namespace ADOPTS it lazily on first lookup, so load order between the two does not matter. With the
 -- table absent, every call here degrades honestly -- `of` returns nil, `label`/`Named` return the bare hash.
 --
