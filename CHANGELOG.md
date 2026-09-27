@@ -47,7 +47,8 @@ installs. No Lua API changed in this release; what changed is how Ess is package
 - **Release** fails unless the committed `manifest.yaml` version equals `Ess.VERSION`, stamps the version
   into the manifest inside the runner only (nothing is committed or pushed from CI), lints the Shipment,
   packages `ess-v<version>.zip` (refusing a zip without `manifest.yaml`) and attaches **both** zips.
-- The `qm` pin is `v3.0.0`, the first `qm` that reads manifest format 2.
+- The `qm` pin is the `v0.15.0` Workshop Tools release, which ships qm 3.0.0, the first `qm` that reads
+  manifest format 2.
 
 ## [0.6.1]
 
