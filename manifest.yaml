@@ -25,8 +25,8 @@ load:
 contributions:
   # Generated: CI and the release workflow copy dist/Ess.lua and dist/EssNames.lua here after
   # build/package.py. src/shipment/lua/ is gitignored; stage it before running qm locally.
-  - { kind: add_script, name: ess,       source: src/shipment/lua/ess.lua }
-  - { kind: add_script, name: ess_names, source: src/shipment/lua/ess_names.lua }
+  - { kind: add_script, name: ess,       source: src/shipment/lua/ess.lua,       exports: [Ess, OnStateChange] }
+  - { kind: add_script, name: ess_names, source: src/shipment/lua/ess_names.lua, exports: [__EssNamesDB] }
   # Committed: extracted byte-exact from the retired data/vz-patch.wad.
   - { kind: add_movie, name: cbar,       movie: src/shipment/movies/cbar.gfx }
   - { kind: add_movie, name: chat,       movie: src/shipment/movies/chat.gfx }
