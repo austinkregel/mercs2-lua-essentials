@@ -15,12 +15,22 @@ in your game folder, you have it). Don't have it yet? Community resources, inclu
 
 ## 1. Install Ess
 
-From a release zip (recommended — [Releases](https://github.com/loganw234/mercs2-lua-essentials/releases)),
-extract it over your game folder. It drops two things into place:
+Each [release](https://github.com/loganw234/mercs2-lua-essentials/releases) carries two zips, one per
+install route:
+
+- **`Ess-<version>.zip` — the OnLoad install** (this guide). Loaded by the lua-bridge loader from
+  `scripts/OnLoad/`. **It has no UI movies, so `Ess.UI` (menus, panels, toasts, the board, chat) does not
+  draw on this install.**
+- **`ess-v<version>.zip` — the Quartermaster Shipment**, installed through Modkit. It carries the UI movies
+  and requires the `lua-bridge` Shipment at `^1.0.0`. As a Shipment, Ess is a library: nothing runs until
+  a Shipment of yours imports it with `import("ess")` (and `import("ess_names")` for hash→name lookups).
+
+For the OnLoad install, extract `Ess-<version>.zip` over your game folder. It drops the framework into place:
 
 ```
-<game>/data/vz-patch.wad             the .gfx movies Ess.UI renders through (menus, toasts, chat)
 <game>/scripts/OnLoad/1_Ess.lua      the framework itself
+<game>/scripts/OnLoad/2_EssNames.lua the optional hash->name table (off until you add its own line;
+                                     Ess-README.txt in the zip has it)
 ```
 
 (The zip also carries `Ess-samples/` — recipes and bigger bind-to-a-key demos — but those are reference

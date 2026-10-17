@@ -9,8 +9,12 @@ that every helper here has to respect (useful even if you're just writing your o
 ```
 src/NN_name.lua     one file per namespace; the NN prefix is LOAD ORDER, not alphabetical
 build/merge.py       concatenates src/ (in an explicit dependency order) into dist/Ess.lua
-build/package.py      builds the release zip in game-folder layout
+build/package.py      builds the OnLoad release zip in game-folder layout (no UI movies)
 dist/                 generated, gitignored -- build it, don't commit it
+manifest.yaml         Ess as a Quartermaster Shipment (format 2): modules ess + ess_names, 12 movies
+src/shipment/movies/  the UI movies (.gfx), committed -- the Shipment's add_movie sources
+src/shipment/lua/     generated, gitignored -- the workflows copy dist/Ess.lua and dist/EssNames.lua here
+                      as ess.lua / ess_names.lua; do the same before running qm locally
 samples/recipes/      short "how do I X?" scripts; each is a living doc AND a smoke test
 samples/demos/         bind-to-a-key interactive demos (reference only -- not deployed by Ess itself)
 tools/                testing infra (checkpure / smoke / lua_repl / launch / xpad) -- see tools/README.md
@@ -65,9 +69,11 @@ engine change ride into a release** as if it were tested.
 
 ## Releasing
 
-Bump `Ess.VERSION` in `src/00_core.lua`, rename the `CHANGELOG.md` `## [Unreleased]` section to the new
-version, and push to `master`. `.github/workflows/release.yml` builds a fresh `1_Ess.lua`, runs the syntax
-gate, packages the zip, and publishes the tagged GitHub Release with your changelog section as its notes.
+Bump `Ess.VERSION` in `src/00_core.lua`, set `shipment.version` in `manifest.yaml` to the same value (the
+release fails if they differ), rename the `CHANGELOG.md` `## [Unreleased]` section to the new version, and
+push to `master`. `.github/workflows/release.yml` builds a fresh `1_Ess.lua`, runs the syntax gate, packages
+the OnLoad zip, lints the Shipment with `qm`, packages it as `ess-v<version>.zip`, and publishes the tagged
+GitHub Release with both zips and your changelog section as its notes.
 
 ## Coding conventions
 
