@@ -9,6 +9,7 @@
 --                                                 deliberately does NOT expose that one.
 --   Ess.Human.dropWeapon(uChar, uWeapon)         Human.Inventory.DropWeapon
 --   Ess.Human.primaryWeapon(uChar) -> uGuid|nil   Human.Inventory.GetPrimaryWeapon
+--   Ess.Human.dropAllWeapons(uChar, sGetMainhandWeapon, sGetOffhandWeapon) <- written by Ferdilanz for the "menace.pro" Discord
 --   Ess.Human.secondaryWeapon(uChar) -> uGuid|nil Human.Inventory.GetSecondaryWeapon
 --   Ess.Human.allWeapons(uChar) -> { uGuid, ... }  Human.Inventory.GetAllWeapons (never nil, empty table)
 --   Ess.Human.setAllWeapons(uChar, tWeaponGuids)  Human.Inventory.SetAllWeapons
@@ -52,6 +53,18 @@ end
 function Ess.Human.primaryWeapon(uChar)
     local ok, w = Ess.Safe.quiet(Human.Inventory.GetPrimaryWeapon, uChar)
     return (ok and w) or nil
+end
+
+function Ess.Human.dropAllWeapons(uChar, sGetMainhandWeapon, sGetOffhandWeapon)
+        local uChar = Ess.Player.character(i)
+        local sGetMainhandWeapon = Ess.Human.primaryWeapon(uChar)
+        if sGetMainhandWeapon then
+            Ess.Safe.quiet(Human.Inventory.DropWeapon(uChar, sGetMainhandWeapon))
+        end
+        local sGetOffhandWeapon = Ess.Human.primaryWeapon(uChar)
+        if sGetOffhandWeapon then
+            Ess.Safe.quiet(Human.Inventory.DropWeapon(uChar, sGetOffhandWeapon))
+        end
 end
 
 function Ess.Human.secondaryWeapon(uChar)
