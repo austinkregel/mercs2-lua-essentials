@@ -50,7 +50,7 @@ function Ess.ScrollLog.new(name, x, y, w, h)
         b.BasicData.name = "MessageBox"
 
         local initFunc = _G.HandleInstantiationEventForTextBuffer
-            or (_G.MrxGuiTextBuffer and _G.MrxGuiTextBuffer.HandleInstantiationEventForTextBuffer)
+            or (MrxGuiTextBuffer and MrxGuiTextBuffer.HandleInstantiationEventForTextBuffer)
         if not initFunc then return nil end
         initFunc(b, {})
 
