@@ -1,6 +1,6 @@
 name: CI
 
-# Validate every push/PR to master: the build merges clean, the merged Lua actually PARSES (a stock
+# Validate every push/PR to main: the build merges clean, the merged Lua actually PARSES (a stock
 # luac5.1 -p syntax gate -- exactly the check that can't be run on the dev box, which has no Lua), and the
 # release zip packages without error. Uploads the zip as a short-lived artifact so a build can be grabbed
 # and tried without cutting a release. Then checks the Quartermaster Shipment (manifest.yaml): stages its
@@ -8,7 +8,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
