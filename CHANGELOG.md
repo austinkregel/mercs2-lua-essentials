@@ -27,6 +27,7 @@ module whose body has already run, and never runs one, so `import("ess")` left `
   game does not hold crashes it natively, which `pcall` cannot catch. Both are retail scripts.
 - The docs no longer say `import("ess")` makes Ess work.
 - CI and releases trigger on `main`, the repo's only branch (they listened on `master`).
+- The `qm` pin is the `v1.19.0` Workshop Tools release, which ships qm 6.0.0, a `qm` that reads `load:`.
 - **Requires `lua-bridge` `^1.2.0`** (at least 1.2.0, below 2.0.0), the release Ess 0.8.0 ships beside.
 
 ## [0.7.0]
