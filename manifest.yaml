@@ -3,12 +3,12 @@ format: 2
 shipment:
   name: ess
   title: Ess — Mercenaries 2 Lua essentials
-  version: 0.7.0
+  version: 0.8.0
   target: retail
   authors: [loganw234]
   description: >-
-    Library only. Adds the `ess` and `ess_names` Lua modules and the Ess UI movies. Nothing runs
-    until a Shipment that requires ess imports it.
+    Library only. Adds the `ess` and `ess_names` Lua modules, which Quartermaster's loader runs
+    when gameplay becomes visible, and the Ess UI movies.
   license: MIT
   tags: [library, lua, ui]
 
@@ -18,15 +18,16 @@ supersedes:
 
 load:
   requires:
-    # lua-bridge 1.0.0 is not published yet. It will be released from its own repo, and Ess 0.7.0
-    # is released only after it: until then this requirement has no provider.
-    - { shipment: lua-bridge, version: "^1.0.0" }
+    - { shipment: lua-bridge, version: "^1.2.0" }
 
 contributions:
   # Generated: CI and the release workflow copy dist/Ess.lua and dist/EssNames.lua here after
   # build/package.py. src/shipment/lua/ is gitignored; stage it before running qm locally.
-  - { kind: add_script, name: ess,       source: src/shipment/lua/ess.lua,       exports: [Ess, OnStateChange] }
-  - { kind: add_script, name: ess_names, source: src/shipment/lua/ess_names.lua, exports: [__EssNamesDB] }
+  # Both are libraries: qm's loader runs each body when gameplay becomes visible (world.begin), where
+  # Ess's OnLoad install ran it; `import` alone never runs a module. Ess.Names adopts __EssNamesDB on
+  # its first lookup, so the two may finish loading in either order.
+  - { kind: add_script, name: ess,       source: src/shipment/lua/ess.lua,       exports: [Ess, OnStateChange], load: { when: world.begin, in: [gameplay] } }
+  - { kind: add_script, name: ess_names, source: src/shipment/lua/ess_names.lua, exports: [__EssNamesDB],       load: { when: world.begin, in: [gameplay] } }
   # Committed: extracted byte-exact from the retired data/vz-patch.wad.
   - { kind: add_movie, name: cbar,       movie: src/shipment/movies/cbar.gfx }
   - { kind: add_movie, name: chat,       movie: src/shipment/movies/chat.gfx }
