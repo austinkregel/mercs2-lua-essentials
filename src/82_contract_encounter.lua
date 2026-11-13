@@ -28,7 +28,7 @@
 -- the hard way (a live crash on MrxMusic in that file before this comment existed).
 import("MrxMusic")
 import("MrxCopterDrop")
-pcall(function() import("MrxVoSequence") end)   -- optional VO integration; pcall since not every install has it
+import("MrxVoSequence")
 
 local Ess = _G.Ess
 local C = Ess.Contract
