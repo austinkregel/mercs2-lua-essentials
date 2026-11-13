@@ -71,7 +71,7 @@ engine change ride into a release** as if it were tested.
 
 Bump `Ess.VERSION` in `src/00_core.lua`, set `shipment.version` in `manifest.yaml` to the same value (the
 release fails if they differ), rename the `CHANGELOG.md` `## [Unreleased]` section to the new version, and
-push to `master`. `.github/workflows/release.yml` builds a fresh `1_Ess.lua`, runs the syntax gate, packages
+push to `main`. `.github/workflows/release.yml` builds a fresh `1_Ess.lua`, runs the syntax gate, packages
 the OnLoad zip, lints the Shipment with `qm`, packages it as `ess-v<version>.zip`, and publishes the tagged
 GitHub Release with both zips and your changelog section as its notes.
 
