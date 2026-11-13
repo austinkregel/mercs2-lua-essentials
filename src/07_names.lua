@@ -20,7 +20,7 @@
 --
 -- THE TABLE IS OPTIONAL AND SHIPPED SEPARATELY. At ~23k entries it is far too large to fold into the one
 -- merged Ess.lua every user loads, so it rides its own file, opted into separately: in the Quartermaster
--- Shipment it is the `ess_names` module, loaded with import("ess_names"); on an OnLoad install it is
+-- Shipment it is the `ess_names` library, which Quartermaster's loader runs beside Ess; on an OnLoad install it is
 -- scripts/OnLoad/2_EssNames.lua from the OnLoad zip, registered with its own lua_loader.ini line. Either way
 -- the file just sets the global `__EssNamesDB`;
 -- this namespace ADOPTS it lazily on first lookup, so load order between the two does not matter. With the
