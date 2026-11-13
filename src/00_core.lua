@@ -34,7 +34,7 @@
 
 _G.Ess = _G.Ess or {}
 local Ess = _G.Ess
-Ess.VERSION = "0.7.0"
+Ess.VERSION = "0.8.0"
 
 Ess.Safe = Ess.Safe or {}
 Ess.Table = Ess.Table or {}
@@ -66,8 +66,8 @@ Ess.Table = Ess.Table or {}
 -- stays entirely plausible. Both channels are load-bearing; only their relative frequency is now known.
 --
 -- Deliberately read at CALL time, not captured -- so flipping it mid-session takes effect immediately, and
--- an OnKey script can toggle it. `or false` (not `= false`) so the setting survives a level reload, which
--- re-runs this whole file.
+-- an OnKey script can toggle it. `or false` (not `= false`) so a setting made before this body ran (Ess
+-- loads when gameplay becomes visible; an OnBoot script runs earlier) is kept.
 Ess.DEBUG = Ess.DEBUG or false
 
 -- ============================================================
@@ -98,8 +98,7 @@ end
 -- nil-on-failure into a garbage-on-failure footgun. Read the message via Ess.lastError() instead.
 -- ============================================================
 
--- The recorded-failure state. Kept on Ess (not a file-local) so a level reload -- which re-runs this whole
--- file -- doesn't wipe a session's tally, and so the bridge REPL can read it directly.
+-- The recorded-failure state. Kept on Ess (not a file-local) so the bridge REPL can read it directly.
 Ess.Safe._last = Ess.Safe._last or nil    -- { msg=, label=, count= } of the most recent failure
 Ess.Safe._fails = Ess.Safe._fails or 0    -- total swallowed failures this session
 Ess.Safe._tally = Ess.Safe._tally or {}    -- [label] = count, only populated while Ess.DEBUG is on
@@ -121,8 +120,12 @@ local ENGINE_NS = {
 
 local function buildLabelMap()
     local map = {}
+    -- Read through Ess's own module env, not _G: the Mrx* modules are bound there by Ess's imports
+    -- (import binds into the importing module's env), and the env reaches the engine namespaces in _G
+    -- too. Retail modules read their env the same way (`local oModule = getfenv()`, antiair.lua:109).
+    local env = getfenv()
     for _, nsName in ipairs(ENGINE_NS) do
-        local ns = _G[nsName]
+        local ns = env[nsName]
         if type(ns) == "table" then
             -- pcall'd: iterating a native-backed table is not guaranteed safe on this engine, and a
             -- diagnostic helper must never be the thing that breaks a running mod.
