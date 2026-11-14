@@ -3,13 +3,32 @@
 All notable changes to Ess are recorded here. Versions track `Ess.VERSION` in `src/00_core.lua`.
 
 Releases are automatic: **bump `Ess.VERSION`, set `manifest.yaml`'s `shipment.version` to match, add a
-matching `## [x.y.z]` section below, and push to `master`**. `.github/workflows/release.yml` then builds a
+matching `## [x.y.z]` section below, and push to `main`**. `.github/workflows/release.yml` then builds a
 fresh `1_Ess.lua`, syntax-checks it, packages the OnLoad zip, lints and packages the Quartermaster Shipment,
 and publishes a GitHub Release tagged `v<version>` with both zips, using that section as the notes. (No
 section for the version? It still releases, with auto-generated commit notes.) See the README's "Releasing"
 section.
 
 ## [Unreleased]
+
+## [0.8.0]
+
+**Ess loads on its own.** In 0.7.0 nothing ran the Shipment's modules: the game's `import` only binds a
+module whose body has already run, and never runs one, so `import("ess")` left `Ess` nil.
+
+- **`ess` and `ess_names` are libraries** with `load: { when: world.begin, in: [gameplay] }`.
+  Quartermaster's loader runs both when gameplay becomes visible, where the OnLoad install ran Ess. Needs a
+  qm with `load:`. A consumer module that uses `Ess` at its top level loads at `world.begin` and calls
+  `import("ess")`: the import makes `ess` a dependency, which the game runs before the consumer's body.
+- **Imported modules are read through Ess's own env**, where `import` binds them, not through `_G`:
+  `Ess.ScrollLog.new`'s text-buffer init (`MrxGuiTextBuffer`), the sandbox's support menu (`MrxGuiBase`) and
+  the `Ess.DEBUG` failure labels for the `Mrx*` namespaces.
+- **`MrxVoSequence` and `MrxGuiBase` are imported plainly**, not inside `pcall`: an import of a module the
+  game does not hold crashes it natively, which `pcall` cannot catch. Both are retail scripts.
+- The docs no longer say `import("ess")` makes Ess work.
+- CI and releases trigger on `main`, the repo's only branch (they listened on `master`).
+- The `qm` pin is the `v1.19.0` Workshop Tools release, which ships qm 6.0.0, a `qm` that reads `load:`.
+- **Requires `lua-bridge` `^1.2.0`** (at least 1.2.0, below 2.0.0), the release Ess 0.8.0 ships beside.
 
 ## [0.7.0]
 

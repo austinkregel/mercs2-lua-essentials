@@ -32,7 +32,7 @@
 -- ephemeral=true is cleaned up when the cutscene ends; by default spawns PERSIST into the mission).
 
 import("MrxMusic")
-pcall(function() import("MrxVoSequence") end)   -- optional VO; not every install has it
+import("MrxVoSequence")
 
 local Ess = _G.Ess
 Ess.Cinematic = Ess.Cinematic or {}

@@ -36,9 +36,16 @@ the lua-bridge itself isn't running, which points back to step 1.
 ## I installed the Ess Shipment, but nothing happens
 
 That's expected. The Shipment (`ess-v<version>.zip`, installed through Modkit) is a **library**: it adds
-the `ess` and `ess_names` Lua modules and the UI movies, and nothing runs until a Shipment that requires
-`ess` imports it with `import("ess")`. Ess on its own changes nothing in game. Your own Shipment has to
-require `ess` and call `import("ess")` before any `Ess.*` call works.
+the `ess` and `ess_names` Lua modules and the UI movies, and Quartermaster's loader runs both when gameplay
+becomes visible (`world.begin`). Ess on its own changes nothing in game; it gives your scripts `Ess`. Before
+that point (the menus, the loading screen) `Ess` is not there yet.
+
+If your own Shipment's module uses `Ess` at its top level and finds it nil, give that module
+`load: { when: world.begin, in: [gameplay] }` and an `import("ess")`. The import makes `ess` one of the
+module's dependencies, and the game runs a module's dependencies before its body; without it, two libraries
+loaded at the same hook finish in no set order. Loading your module at an earlier hook would pull Ess in
+earlier too, before the world exists, which Ess's own setup (GPS tracking, the Net heartbeat) is not written
+for.
 
 ## The UI doesn't draw, and I installed from `Ess-<version>.zip`
 
@@ -51,8 +58,9 @@ Shipment, `ess-v<version>.zip`, installed through Modkit. See [GETTING_STARTED.m
 The hash→name table is optional and loaded separately from Ess, so check that it's actually loaded
 (`Ess.Names.installed()` returns `false` without it):
 
-- **Shipment install:** your Shipment also needs `import("ess_names")`. `import("ess")` alone doesn't
-  load the table.
+- **Shipment install:** Quartermaster's loader loads the table (`ess_names`) beside Ess when gameplay
+  becomes visible; if `Ess.Names.installed()` is still `false` in the world, `ess_names` did not load, and
+  `pmc_blackbox.log` says why.
 - **OnLoad install:** `scripts/OnLoad/2_EssNames.lua` is in the zip but stays off until you add its own
   line under `[OnLoad]` in `scripts/lua_loader.ini` (merge it in; don't overwrite the file):
 
@@ -70,8 +78,8 @@ a miss is reported as unknown, never as a guessed name.
 ## Modkit refuses to build with Ess
 
 - **M0204:** a requirement is missing or out of range. The Ess Shipment requires the `lua-bridge`
-  Shipment at `^1.0.0` (at least 1.0.0, below 2.0.0). If lua-bridge isn't installed, or the installed
-  one is older than 1.0.0, install or update it.
+  Shipment at `^1.2.0` (at least 1.2.0, below 2.0.0). If lua-bridge isn't installed, or the installed
+  one is older than 1.2.0, install or update it.
 - **M0208:** an OnLoad copy of Ess is still in the game folder. The Shipment supersedes
   `scripts/OnLoad/1_Ess.lua` and `scripts/OnLoad/2_EssNames.lua`, so it can't be installed on top of them.
   Remove both files (from a manual or `Ess-<version>.zip` install) first, then build again.

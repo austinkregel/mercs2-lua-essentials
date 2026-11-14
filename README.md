@@ -60,8 +60,12 @@ gates, and the confirmed engine rules to respect.
   install.** The movies ship only in the Shipment (below).
 - `manifest.yaml` + `src/shipment/` — Ess as a **Quartermaster Shipment** (manifest format 2), the other
   install route. It adds two Lua modules, `ess` and `ess_names`, plus the 12 UI movies, and requires the
-  `lua-bridge` Shipment at `^1.0.0`. Ess is a library: nothing imports it automatically, and a consuming
-  Shipment calls `import("ess")` (and `import("ess_names")` for hash→name lookups). The movies are
+  `lua-bridge` Shipment at `^1.2.0`. Both modules are libraries with a `load:`: Quartermaster's loader runs
+  them when gameplay becomes visible (`world.begin`), so `Ess` is there for every Shipment without an
+  import of its own. A consumer's own module whose top-level code uses `Ess` should load at `world.begin`
+  too and `import("ess")`: the import puts `ess` in the module's dependencies, and the game runs a module's
+  dependencies before its body (two libraries of one hook otherwise finish loading in no set order). The
+  call itself never runs a module; it binds one whose body has run. The movies are
   committed as `src/shipment/movies/*.gfx`. `src/shipment/lua/` is generated and gitignored: the CI and
   release workflows copy `dist/Ess.lua` → `src/shipment/lua/ess.lua` and `dist/EssNames.lua` →
   `src/shipment/lua/ess_names.lua` after `build/package.py`, and you must do the same before running
@@ -96,7 +100,7 @@ Releases are cut by GitHub Actions on a **version bump** — you never build or 
    two differ; the workflow never commits a fix for you.
 3. Add a matching `## [0.2.0]` section to [`CHANGELOG.md`](CHANGELOG.md) describing the changes — this
    becomes the release notes.
-4. Commit all three and push to `master`.
+4. Commit all three and push to `main`.
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) fires (it watches `src/00_core.lua`), and
 if a `v0.2.0` tag doesn't already exist it builds a fresh `1_Ess.lua`, runs the `luac` syntax gate, packages

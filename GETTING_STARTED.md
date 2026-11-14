@@ -22,8 +22,10 @@ install route:
   `scripts/OnLoad/`. **It has no UI movies, so `Ess.UI` (menus, panels, toasts, the board, chat) does not
   draw on this install.**
 - **`ess-v<version>.zip` — the Quartermaster Shipment**, installed through Modkit. It carries the UI movies
-  and requires the `lua-bridge` Shipment at `^1.0.0`. As a Shipment, Ess is a library: nothing runs until
-  a Shipment of yours imports it with `import("ess")` (and `import("ess_names")` for hash→name lookups).
+  and requires the `lua-bridge` Shipment at `^1.2.0`. Quartermaster's loader runs Ess (and the hash→name
+  table, `ess_names`) when gameplay becomes visible, so `Ess` is there for your scripts once you are in the
+  world. A module of your own that uses `Ess` at its top level loads at `world.begin` too and calls
+  `import("ess")`, which makes the game run Ess first (see TROUBLESHOOTING.md).
 
 For the OnLoad install, extract `Ess-<version>.zip` over your game folder. It drops the framework into place:
 

@@ -81,8 +81,8 @@ Ess.Raw.Sandbox._supportSnaps = Ess.Raw.Sandbox._supportSnaps or {}
 local function supportWidget()
     local okp, p = Ess.Safe.quiet(Player.GetLocalPlayer)
     if not okp or not p then return nil end
-    pcall(function() import("MrxGuiBase") end)
-    local G = _G.MrxGuiBase
+    import("MrxGuiBase")
+    local G = MrxGuiBase
     if not (G and G.GetWidgetByNameAndOwner) then return nil end
     local okw, w = pcall(G.GetWidgetByNameAndOwner, "Support Menu", p)
     if okw then return w end

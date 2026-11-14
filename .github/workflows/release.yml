@@ -3,9 +3,9 @@ name: Release on version bump
 # Cut a versioned GitHub Release automatically whenever Ess.VERSION changes.
 #
 # Flow: bump Ess.VERSION in src/00_core.lua, add a matching "## [x.y.z]" section to CHANGELOG.md, and push
-# to master. This runs on the push, reads the version, and -- only if a tag v<version> doesn't already
+# to main. This runs on the push, reads the version, and -- only if a tag v<version> doesn't already
 # exist -- builds a fresh 1_Ess.lua, syntax-checks it, packages the zip, and publishes a Release tagged
-# v<version> with the CHANGELOG section as its notes. It runs on EVERY push to master but is fully
+# v<version> with the CHANGELOG section as its notes. It runs on EVERY push to main but is fully
 # idempotent: a push that doesn't change the version finds the tag already there and stops after a quick
 # check, so "release when (and only when) the version is new" needs no extra bookkeeping.
 #
@@ -16,7 +16,7 @@ name: Release on version bump
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:             # ...or trigger a release by hand
 
 permissions:
