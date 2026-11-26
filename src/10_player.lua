@@ -6,6 +6,11 @@
 --   Ess.Player.camera(i)    -> uCameraGuid | nil    resolves index -> Player.GetCamera(slot) in one call
 --   Ess.Player.giveCash(n)                          routes through MrxPmc.AddCashQty (HUD-updating)
 --   Ess.Player.giveFuel(n)                          routes through MrxPmc.AddFuelQty (HUD-updating)
+--
+--   Ess.Player.addFuelCapacity(n)                  <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.setFuelCapacity(n)                 <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.bInfiniteFuel(uGuid, bOn)           <-- written by Ferdilanz for the "menace.pro" Discord
+--
 --   Ess.Player.pose(i)      -> x, y, z, yaw, uChar, uPlayerSlot
 --   Ess.Player.targetUnderReticle(i) -> uGuid|nil, x, y, z    "what am I aiming at" -- the flagship reason
 --                                        the wiki's whole Engine Namespaces section exists at all
@@ -27,6 +32,7 @@
 
 import("MrxPmc")
 import("MrxUtil")
+--import("MrxSupport")
 
 local Ess = _G.Ess
 Ess.Player = Ess.Player or {}
@@ -96,7 +102,22 @@ function Ess.Player.giveFuel(n)
     local ok = Ess.Safe.quiet(MrxPmc.AddFuelQty, n)
     return ok and true or false
 end
+--[[
+function Ess.Player.addFuelCapacity(n)
+    local ok = Ess.Safe.quiet(MrxPmc.AddFuelCapacity, n)
+    return ok and true or false
+end
 
+function Ess.Player.setFuelCapacity(n)
+    local ok = Ess.Safe.quiet(MrxPmc.SetFuelCapacity, n, true, false)
+    return ok and true or false
+end
+
+function Ess.Player.bInfiniteFuel(uChar, bOn)
+    local isEnabled = not isEnabled
+    if (Ess.Safe.quiet(MrxSupport.GetFuelCost) > 0) then (Ess.Safe.quiet(MrxSupport.SetFuelCost, self, 0))
+end
+--]]
 -- Ess.Player.pose(i) -> x, y, z, yaw, uChar, uPlayerSlot
 -- One-stop "where is this player, facing which way" -- promoted from uilib's private pose() helper.
 -- yaw defaults to 0 if unreadable; x/y/z are nil if there's no character at all (e.g. i=1 outside co-op).
