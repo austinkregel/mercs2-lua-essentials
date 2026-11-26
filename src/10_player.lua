@@ -114,8 +114,8 @@ function Ess.Player.setFuelCapacity(n)
 end
 
 function Ess.Player.bInfiniteFuel(uChar, bOn)
-    local isEnabled = not isEnabled
     if (Ess.Safe.quiet(MrxSupport.GetFuelCost) > 0) then (Ess.Safe.quiet(MrxSupport.SetFuelCost, self, 0))
+    return bOn and true or false
 end
 --]]
 -- Ess.Player.pose(i) -> x, y, z, yaw, uChar, uPlayerSlot
