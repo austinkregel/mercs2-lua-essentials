@@ -117,8 +117,8 @@ function Ess.Player.setFuelCapacity(n)
     return (ok and good) and true or false
 end
 
-function Ess.Player.FillFuel(uChar) -- arg looking for Ess.Player.character(0 or 1) --- idk I just felt like putting an arg for the function, maybe it'll help for MP/co-op
-        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel()
+function Ess.Player.FillFuel(uChar) -- arg looking for Ess.Player.character(i) where i=0 for host or i=1 for client
+        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel() -- idk I just felt like putting an arg for the function, maybe it'll help for MP/co-op
         local nDiff = (nFuelCapacity - nCurrentFuel)
         Ess.Player.giveFuel(nCurrentFuel + nDiff)
 end
@@ -129,7 +129,7 @@ function Ess.Player.ResetFuel(uChar)
 end
 
 function Ess.Player.InfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
-        local UnlimitedSupport = Ess.On.script("SupportUsed", function(oSupport)
+        local UnlimitedSupport = Ess.On.script("SupportUsed", function(oSupport) -- huge thanks to AustinKregel for help making this
         Ess.Player.giveFuel(oSupport.nFuelConsumed)
         return isEnabled and true or false
         end)
