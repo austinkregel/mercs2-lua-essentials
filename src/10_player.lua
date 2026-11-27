@@ -9,7 +9,9 @@
 --
 --   Ess.Player.addFuelCapacity(n)                  <-- written by Ferdilanz for the "menace.pro" Discord
 --   Ess.Player.setFuelCapacity(n)                 <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.bInfiniteFuel(uGuid, bOn)           <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.FillFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.ResetFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.InfiniteFuel(uchar, isEnabled)    <-- written by Ferdilanz for the "menace.pro" Discord
 --
 --   Ess.Player.pose(i)      -> x, y, z, yaw, uChar, uPlayerSlot
 --   Ess.Player.targetUnderReticle(i) -> uGuid|nil, x, y, z    "what am I aiming at" -- the flagship reason
@@ -32,7 +34,6 @@
 
 import("MrxPmc")
 import("MrxUtil")
---import("MrxSupport")
 
 local Ess = _G.Ess
 Ess.Player = Ess.Player or {}
@@ -102,22 +103,39 @@ function Ess.Player.giveFuel(n)
     local ok = Ess.Safe.quiet(MrxPmc.AddFuelQty, n)
     return ok and true or false
 end
---[[
-function Ess.Player.addFuelCapacity(n)
+-- below functions by Ferdilanz \
+function Ess.Player.addFuelCapacity(n) -- just a simple add x to y. Surprisingly not as complex as SetFuelCapacity
     local ok = Ess.Safe.quiet(MrxPmc.AddFuelCapacity, n)
     return ok and true or false
 end
 
 function Ess.Player.setFuelCapacity(n)
-    local ok = Ess.Safe.quiet(MrxPmc.SetFuelCapacity, n, true, false)
-    return ok and true or false
+    local ok, good = Ess.Safe.quiet(MrxPmc.SetFuelCapacity, n, true, true) -- MrxPmc.SetFuelCapacity(nQty, bCheat, bDoNotSyncFuel)
+    if ok and good then                                                    -- where bCheat ignores the min300-9999max limit
+        Ess.Safe.quiet(MrxPmc.DisplayResources)                            -- and bDoNotSyncFuel allows CurrentFuel to exceed capaxity
+    end                                                                    -- We have to DisplayResources to get the capaxity to update
+    return (ok and good) and true or false
 end
 
-function Ess.Player.bInfiniteFuel(uChar, bOn)
-    if (Ess.Safe.quiet(MrxSupport.GetFuelCost) > 0) then (Ess.Safe.quiet(MrxSupport.SetFuelCost, self, 0))
-    return bOn and true or false
+function Ess.Player.FillFuel(uChar) -- arg looking for Ess.Player.character(0 or 1) --- idk I just felt like putting an arg for the function, maybe it'll help for MP/co-op
+        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel()
+        local nDiff = (nFuelCapacity - nCurrentFuel)
+        Ess.Player.giveFuel(nCurrentFuel + nDiff)
 end
---]]
+
+function Ess.Player.ResetFuel(uChar)
+        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel()
+        Ess.Player.giveFuel(nCurrentFuel - nCurrentFuel)
+end
+
+function Ess.Player.InfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
+        local UnlimitedSupport = Ess.On.script("SupportUsed", function(oSupport)
+        Ess.Player.giveFuel(oSupport.nFuelConsumed)
+        return isEnabled and true or false
+        end)
+end
+-- end functions by Ferdilanz /
+
 -- Ess.Player.pose(i) -> x, y, z, yaw, uChar, uPlayerSlot
 -- One-stop "where is this player, facing which way" -- promoted from uilib's private pose() helper.
 -- yaw defaults to 0 if unreadable; x/y/z are nil if there's no character at all (e.g. i=1 outside co-op).
