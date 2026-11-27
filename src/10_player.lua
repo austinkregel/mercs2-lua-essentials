@@ -11,7 +11,7 @@
 --   Ess.Player.setFuelCapacity(n)                 <-- written by Ferdilanz for the "menace.pro" Discord
 --   Ess.Player.FillFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
 --   Ess.Player.ResetFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.InfiniteFuel(uchar, isEnabled)    <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.setInfiniteFuel(uchar, isEnabled)    <-- written by Ferdilanz for the "menace.pro" Discord
 --
 --   Ess.Player.pose(i)      -> x, y, z, yaw, uChar, uPlayerSlot
 --   Ess.Player.targetUnderReticle(i) -> uGuid|nil, x, y, z    "what am I aiming at" -- the flagship reason
@@ -128,7 +128,7 @@ function Ess.Player.ResetFuel(uChar)
         Ess.Player.giveFuel(nCurrentFuel - nCurrentFuel)
 end
 
-function Ess.Player.InfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
+function Ess.Player.setInfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
         local UnlimitedSupport = Ess.On.script("SupportUsed", function(oSupport) -- huge thanks to AustinKregel for help making this
         Ess.Player.giveFuel(oSupport.nFuelConsumed)
         return isEnabled and true or false
