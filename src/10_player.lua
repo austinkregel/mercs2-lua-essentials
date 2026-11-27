@@ -7,11 +7,12 @@
 --   Ess.Player.giveCash(n)                          routes through MrxPmc.AddCashQty (HUD-updating)
 --   Ess.Player.giveFuel(n)                          routes through MrxPmc.AddFuelQty (HUD-updating)
 --
---   Ess.Player.addFuelCapacity(n)                  <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.setFuelCapacity(n)                 <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.FillFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.ResetFuel(uChar)                    <-- written by Ferdilanz for the "menace.pro" Discord
---   Ess.Player.setInfiniteFuel(uchar, isEnabled)    <-- written by Ferdilanz for the "menace.pro" Discord
+--   Ess.Player.addFuelCapacity(n)                    -- written by Ferdilanz for the "menace.pro" Discord v
+--   Ess.Player.setFuelCapacity(n)                                          |
+--   Ess.Player.FillFuel(uChar)                                             |
+--   Ess.Player.ResetFuel(uChar)                                            |
+--   Ess.Player.setInfiniteFuel(uChar, isEnabled)                           |
+--   Ess.Player.getInfiniteFuel(uChar)                -- written by Ferdilanz for the "menace.pro" Discord ^
 --
 --   Ess.Player.pose(i)      -> x, y, z, yaw, uChar, uPlayerSlot
 --   Ess.Player.targetUnderReticle(i) -> uGuid|nil, x, y, z    "what am I aiming at" -- the flagship reason
@@ -133,6 +134,10 @@ function Ess.Player.setInfiniteFuel(uChar, isEnabled) -- make a var = Ess.State(
         Ess.Player.giveFuel(oSupport.nFuelConsumed)
         return isEnabled and true or false
         end)
+end
+
+function Ess.Player.getInfiniteFuel(uChar) -- trying to see if menu:switch("label",get,set) can be used in my menu instead of menu:entry for boolgetting/boolsetting
+        -- awaiting solution
 end
 -- end functions by Ferdilanz /
 
