@@ -6,6 +6,14 @@
 --   Ess.Player.camera(i)    -> uCameraGuid | nil    resolves index -> Player.GetCamera(slot) in one call
 --   Ess.Player.giveCash(n)                          routes through MrxPmc.AddCashQty (HUD-updating)
 --   Ess.Player.giveFuel(n)                          routes through MrxPmc.AddFuelQty (HUD-updating)
+--
+--   Ess.Player.addFuelCapacity(n)                    -- written by Ferdilanz for the "menace.pro" Discord v
+--   Ess.Player.setFuelCapacity(n)                                          |
+--   Ess.Player.fillFuel(uChar)                                             |
+--   Ess.Player.resetFuel(uChar)                                            |
+--   Ess.Player.setInfiniteFuel(uChar, isEnabled)                           |
+--   Ess.Player.getInfiniteFuel(uChar)                -- written by Ferdilanz for the "menace.pro" Discord ^
+--
 --   Ess.Player.pose(i)      -> x, y, z, yaw, uChar, uPlayerSlot
 --   Ess.Player.targetUnderReticle(i) -> uGuid|nil, x, y, z    "what am I aiming at" -- the flagship reason
 --                                        the wiki's whole Engine Namespaces section exists at all
@@ -96,6 +104,42 @@ function Ess.Player.giveFuel(n)
     local ok = Ess.Safe.quiet(MrxPmc.AddFuelQty, n)
     return ok and true or false
 end
+-- below functions by Ferdilanz \
+function Ess.Player.addFuelCapacity(n) -- just a simple add x to y. Surprisingly not as complex as SetFuelCapacity
+    local ok = Ess.Safe.quiet(MrxPmc.AddFuelCapacity, n)
+    return ok and true or false
+end
+
+function Ess.Player.setFuelCapacity(n)
+    local ok, good = Ess.Safe.quiet(MrxPmc.SetFuelCapacity, n, true, true) -- MrxPmc.SetFuelCapacity(nQty, bCheat, bDoNotSyncFuel)
+    if ok and good then                                                    -- where bCheat ignores the min300-9999max limit
+        Ess.Safe.quiet(MrxPmc.DisplayResources)                            -- and bDoNotSyncFuel allows CurrentFuel to exceed capaxity
+    end                                                                    -- We have to DisplayResources to get the capaxity to update
+    return (ok and good) and true or false
+end
+
+function Ess.Player.fillFuel(uChar) -- arg looking for Ess.Player.character(i) where i=0 for host or i=1 for client
+        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel() -- idk I just felt like putting an arg for the function, maybe it'll help for MP/co-op
+        local nDiff = (nFuelCapacity - nCurrentFuel)
+        Ess.Player.giveFuel(nCurrentFuel + nDiff)
+end
+
+function Ess.Player.resetFuel(uChar)
+        local nCurrentFuel, nFuelCapacity = Ess.Player.fuel()
+        Ess.Player.giveFuel(nCurrentFuel - nCurrentFuel)
+end
+
+function Ess.Player.setInfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
+        local SupportDetector = Ess.On.script("SupportUsed", function(oSupport) -- huge thanks to AustinKregel for help making this
+        Ess.Player.giveFuel(oSupport.nFuelConsumed)
+        return isEnabled and true or false
+        end)
+end
+
+function Ess.Player.getInfiniteFuel(uChar) -- trying to see if menu:switch("label",get,set) can be used in my menu instead of menu:entry for boolgetting/boolsetting
+        -- awaiting solution
+end
+-- end functions by Ferdilanz /
 
 -- Ess.Player.pose(i) -> x, y, z, yaw, uChar, uPlayerSlot
 -- One-stop "where is this player, facing which way" -- promoted from uilib's private pose() helper.
