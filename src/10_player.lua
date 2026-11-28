@@ -9,8 +9,8 @@
 --
 --   Ess.Player.addFuelCapacity(n)                    -- written by Ferdilanz for the "menace.pro" Discord v
 --   Ess.Player.setFuelCapacity(n)                                          |
---   Ess.Player.FillFuel(uChar)                                             |
---   Ess.Player.ResetFuel(uChar)                                            |
+--   Ess.Player.fillFuel(uChar)                                             |
+--   Ess.Player.resetFuel(uChar)                                            |
 --   Ess.Player.setInfiniteFuel(uChar, isEnabled)                           |
 --   Ess.Player.getInfiniteFuel(uChar)                -- written by Ferdilanz for the "menace.pro" Discord ^
 --
@@ -118,13 +118,13 @@ function Ess.Player.setFuelCapacity(n)
     return (ok and good) and true or false
 end
 
-function Ess.Player.FillFuel(uChar) -- arg looking for Ess.Player.character(i) where i=0 for host or i=1 for client
+function Ess.Player.fillFuel(uChar) -- arg looking for Ess.Player.character(i) where i=0 for host or i=1 for client
         local nCurrentFuel, nFuelCapacity = Ess.Player.fuel() -- idk I just felt like putting an arg for the function, maybe it'll help for MP/co-op
         local nDiff = (nFuelCapacity - nCurrentFuel)
         Ess.Player.giveFuel(nCurrentFuel + nDiff)
 end
 
-function Ess.Player.ResetFuel(uChar)
+function Ess.Player.resetFuel(uChar)
         local nCurrentFuel, nFuelCapacity = Ess.Player.fuel()
         Ess.Player.giveFuel(nCurrentFuel - nCurrentFuel)
 end
