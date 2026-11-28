@@ -130,7 +130,7 @@ function Ess.Player.resetFuel(uChar)
 end
 
 function Ess.Player.setInfiniteFuel(uChar, isEnabled) -- make a var = Ess.State("identifierString", { arg = false }) and var.arg = not var.arg with this function to use it in a menu context
-        local UnlimitedSupport = Ess.On.script("SupportUsed", function(oSupport) -- huge thanks to AustinKregel for help making this
+        local SupportDetector = Ess.On.script("SupportUsed", function(oSupport) -- huge thanks to AustinKregel for help making this
         Ess.Player.giveFuel(oSupport.nFuelConsumed)
         return isEnabled and true or false
         end)
